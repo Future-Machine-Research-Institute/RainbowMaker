@@ -1,0 +1,5 @@
+<!--index.wxml-->
+<view class="container">
+  <image class= "showImage" mode="aspectFit" src="{{src}}" style="width:{{imageWidth}};height:{{imageHeight}}"></image>
+  <button type="default" bindtap="gotoShow" >点击上传照片</button>
+</view>
