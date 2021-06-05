@@ -1,5 +1,7 @@
 <!--index.wxml-->
 <view class="container">
-  <image class= "showImage" mode="aspectFit" src="{{src}}" style="width:{{imageWidth}};height:{{imageHeight}}"></image>
-  <button type="default" bindtap="gotoShow" >点击上传照片</button>
+  <image class= "idPhotoImage" mode="aspectFit" src="{{src}}"></image>
+  <button class= "uploadButton" type="default" bindtap="gotoShow" style="margin-top:{{uploadButtonToTop}}rpx">上传照片</button>
+  <button class= "downloadButton" type="default" bindtap="downloadToPhotoAlbum" style="margin-top:{{uploadButtonToTop}}rpx">下载照片</button>
 </view>
+<!-- style="margin-top:{{uploadButtonToTop}}rpx" -->

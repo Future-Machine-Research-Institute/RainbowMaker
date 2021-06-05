@@ -7,9 +7,10 @@ Page({
    * 页面的初始数据
    */
   data: {
-    imageWidth:'0px',
-    imageHeight:'0px',
-    src:""
+    // imageWidth: 0,
+    // imageHeight: 0,
+    uploadButtonToTop: 0,
+    src: ""
   },
 
   gotoShow() {
@@ -42,13 +43,28 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad: function (options) {
-    console.log(wx.getSystemInfoSync().windowHeight)
-    console.log(wx.getSystemInfoSync().windowWidth)
+     console.log(wx.getSystemInfoSync().windowHeight)
+     console.log(wx.getSystemInfoSync().windowWidth)
+     // 获取可使用窗口宽度
+    let clientHeight = wx.getSystemInfoSync().windowHeight;
+    // 获取可使用窗口高度
+    let clientWidth = wx.getSystemInfoSync().windowWidth;
+    // 算出比例
+    let ratio = 750 / clientWidth;
+    // 算出高度(单位rpx)
+    let height = clientHeight * ratio;
+    console.log("realHeight: ", height)
     let that = this;
     that.setData({
-      imageHeight: wx.getSystemInfoSync().windowWidth * 0.5 * 413/295,
-      imageWidth: wx.getSystemInfoSync().windowWidth * 0.5
+      uploadButtonToTop: height - 130
     })
+    // let that = this;
+    // that.setData({
+    //   //  imageHeight: wx.getSystemInfoSync().windowWidth * 413 / 295,
+    //   //  imageWidth: wx.getSystemInfoSync().windowWidth
+    //   imageHeight: 413,
+    //   imageWidth: 295
+    // })
   },
 
   /**
