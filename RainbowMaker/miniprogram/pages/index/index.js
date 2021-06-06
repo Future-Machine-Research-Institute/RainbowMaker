@@ -1,6 +1,8 @@
 //index.js
 const app = getApp()
 
+const FormData = require('../../thirdParty/wxFormdata/formData.js')
+
 Page({
 
   /**
@@ -9,8 +11,36 @@ Page({
   data: {
     // imageWidth: 0,
     // imageHeight: 0,
+    imageBackgroundColor : 'white',
     uploadButtonToTop: 0,
     src: ""
+  },
+
+    /**
+   * 私有函数
+   */
+  whiteSelected() {
+    console.log("whiteSelected")
+    let that = this;
+    that.setData({
+      imageBackgroundColor : 'white'
+  })
+  },
+
+  blueSelected() {
+    console.log("blueSelected")
+    let that = this;
+    that.setData({
+      imageBackgroundColor : 'rgb(60, 140, 220)'
+  })
+  },
+
+  redSelected() {
+    console.log("redSelected")
+    let that = this;
+    that.setData({
+      imageBackgroundColor : 'rgb(255, 0, 0)'
+  })
   },
 
   gotoShow() {
@@ -27,6 +57,33 @@ Page({
         that.setData({
           src:res.tempFilePaths
       })
+
+      let formData = new FormData()
+      formData.append("api_key", "DCgBh_K6hy8jgfEmHmt4H3knmgtL7zj3")
+      formData.append("api_secret", "C-Kp9_XiN536UCDjkKGkaZnAigWRuOL-")
+      formData.appendFile("image_file", res.tempFilePaths[0])
+      let data = formData.getData();
+      wx.request ({
+        url: 'https://api-cn.faceplusplus.com/humanbodypp/v2/segment',
+        method: "post",
+        header: {
+        'content-type': data.contentType
+      },
+      data: data.buffer,
+      success:function(res){
+        console.log('success');
+        console.log(res)
+      },
+      fail:function(){
+        console.log('failed');
+        console.log(res)
+      },
+      complete:function() {
+        console.log('completed');
+        //console.log(res)
+      }
+    })
+
       },
       fail: function() {
         // fail
@@ -37,6 +94,10 @@ Page({
         console.log("complete")
         }
     })
+  },
+
+  downloadToPhotoAlbum() {
+    console.log("downloadToPhotoAlbum")
   },
 
   /**

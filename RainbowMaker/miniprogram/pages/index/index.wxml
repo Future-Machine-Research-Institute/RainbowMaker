@@ -1,7 +1,14 @@
 <!--index.wxml-->
-<view class="container">
-  <image class= "idPhotoImage" mode="aspectFit" src="{{src}}"></image>
-  <button class= "uploadButton" type="default" bindtap="gotoShow" style="margin-top:{{uploadButtonToTop}}rpx">上传照片</button>
-  <button class= "downloadButton" type="default" bindtap="downloadToPhotoAlbum" style="margin-top:{{uploadButtonToTop}}rpx">下载照片</button>
+<view class = "container">
+  <image class = "idPhotoImage" mode = "aspectFit" src = "{{src}}" style = "background-color:{{imageBackgroundColor}}"></image>
+  <view class = "backgroundColorSelectedView">
+    <button class = "whiteSelectedButton" bindtap = "whiteSelected"></button>
+    <button class = "blueSelectedButton" bindtap = "blueSelected"></button>
+    <button class = "redSelectedButton" bindtap = "redSelected"></button>
+  </view>
+  <view class = "uploadAndDownloadButtonView" style="margin-top:{{uploadButtonToTop}}rpx">
+    <button class= "uploadButton" type = "default" bindtap = "gotoShow">上传照片</button>
+    <button class= "downloadButton" type="default" bindtap = "downloadToPhotoAlbum">下载照片</button>
+  </view>
 </view>
 <!-- style="margin-top:{{uploadButtonToTop}}rpx" -->
