@@ -1,6 +1,6 @@
 <!--index.wxml-->
 <view class = "container">
-  <image class = "idPhotoImage" mode = "aspectFit" src = "{{src}}" style = "background-color:{{imageBackgroundColor}}"></image>
+  <image class = "idPhotoImage" mode = "aspectFill" src = "data:image/png;base64,{{src}}" style = "background-color:{{imageBackgroundColor}}"></image>
   <view class = "backgroundColorSelectedView">
     <button class = "whiteSelectedButton" bindtap = "whiteSelected"></button>
     <button class = "blueSelectedButton" bindtap = "blueSelected"></button>

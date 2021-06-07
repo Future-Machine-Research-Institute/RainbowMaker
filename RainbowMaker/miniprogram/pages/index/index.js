@@ -54,46 +54,86 @@ Page({
         // 返回选定照片的本地文件路径列表，tempFilePath可以作为img标签的src属性显示图片
         console.log(res)
         var tempFilePaths = res.tempFilePaths
-        that.setData({
-          src:res.tempFilePaths
+      //   that.setData({
+      //     src:res.tempFilePaths
+      // })
+
+        let formData = new FormData()
+        formData.append("api_key", "DCgBh_K6hy8jgfEmHmt4H3knmgtL7zj3")
+        formData.append("api_secret", "C-Kp9_XiN536UCDjkKGkaZnAigWRuOL-")
+        formData.append("return_grayscale",0)
+        formData.appendFile("image_file", res.tempFilePaths[0])
+        let data = formData.getData();
+        wx.showLoading({
+          title: '上传中',
+        })
+        wx.request ({
+          url: 'https://api-cn.faceplusplus.com/humanbodypp/v2/segment',
+          method: "post",
+          header: {
+          'content-type': data.contentType
+        },
+        data: data.buffer,
+        success:function(res){
+          console.log('success');
+          console.log(res)
+          var statusCode = res.statusCode
+          var errMsg = res.data.error_message
+          var base64Image = res.data.body_image
+          wx.hideLoading({
+            success: (res) => {
+              if(statusCode == 200) {
+                wx.showToast({
+                  title: '上传成功',
+                  icon: 'none',
+                  duration: 1000
+                })
+                that.setData({
+                  src: base64Image
+                })
+              } else {
+                wx.showToast({
+                  title: '上传失败，' + errMsg,
+                  icon: 'none',
+                  duration: 1500
+                })
+              }
+            },
+          })
+        },
+        fail:function(res){
+          console.log('failed');
+          console.log(res)
+          wx.hideLoading({
+            success: (res) => {
+              wx.showToast({
+                title: '上传失败，' + res.errMsg,
+                icon: 'none',
+                duration: 1500
+              })
+            },
+          })
+        },
+        complete:function() {
+          console.log('completed');
+        }
       })
 
-      let formData = new FormData()
-      formData.append("api_key", "DCgBh_K6hy8jgfEmHmt4H3knmgtL7zj3")
-      formData.append("api_secret", "C-Kp9_XiN536UCDjkKGkaZnAigWRuOL-")
-      formData.appendFile("image_file", res.tempFilePaths[0])
-      let data = formData.getData();
-      wx.request ({
-        url: 'https://api-cn.faceplusplus.com/humanbodypp/v2/segment',
-        method: "post",
-        header: {
-        'content-type': data.contentType
-      },
-      data: data.buffer,
-      success:function(res){
-        console.log('success');
-        console.log(res)
-      },
-      fail:function(){
-        console.log('failed');
-        console.log(res)
-      },
-      complete:function() {
-        console.log('completed');
-        //console.log(res)
-      }
-    })
-
-      },
-      fail: function() {
-        // fail
-        console.log("fail")
         },
-        complete: function() {
-        // complete
-        console.log("complete")
-        }
-    })
+        fail: function() {
+          // fail
+          console.log("fail")
+          wx.showToast({
+            title: '选取图片失败',
+            icon: 'none',
+            duration: 1500
+          })
+          },
+          complete: function() {
+          // complete
+          console.log("complete")
+          }
+      })
   },
 
   downloadToPhotoAlbum() {
