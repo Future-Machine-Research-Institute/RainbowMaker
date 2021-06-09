@@ -1,6 +1,7 @@
 <!--index.wxml-->
 <view class = "container">
-  <image class = "idPhotoImage" mode = "aspectFill" src = "data:image/png;base64,{{src}}" style = "background-color:{{imageBackgroundColor}}"></image>
+  <!-- <image class = "idPhotoImage" mode = "aspectFill" src = "data:image/png;base64,{{src}}" style = "background-color:{{imageBackgroundColor}}"></image> -->
+  <canvas class = "idPhotoImage" type = "2d" id = "canvas_box" style = "background-color:{{imageBackgroundColor}}" canvasId = "canvas_box" ></canvas>
   <view class = "backgroundColorSelectedView">
     <button class = "whiteSelectedButton" bindtap = "whiteSelected"></button>
     <button class = "blueSelectedButton" bindtap = "blueSelected"></button>

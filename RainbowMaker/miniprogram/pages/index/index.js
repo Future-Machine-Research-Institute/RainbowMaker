@@ -13,12 +13,19 @@ Page({
     // imageHeight: 0,
     imageBackgroundColor : 'white',
     uploadButtonToTop: 0,
-    src: ""
+    src: "",
+    canvasImage:""
   },
 
     /**
    * 私有函数
    */
+//   data () {
+//     return {
+//       canvas: null // 实例
+//     }
+// },
+
   whiteSelected() {
     console.log("whiteSelected")
     let that = this;
@@ -54,6 +61,33 @@ Page({
         // 返回选定照片的本地文件路径列表，tempFilePath可以作为img标签的src属性显示图片
         console.log(res)
         var tempFilePaths = res.tempFilePaths
+
+      //   const query = wx.createSelectorQuery()
+      //   query.select('#canvas_box')
+      //   .fields({ node: true, size: true })
+      //    .exec((res) => {
+      //   const canvas = res[0].node
+      //   const ctx = canvas.getContext('2d')
+      //   const dpr = wx.getSystemInfoSync().pixelRatio
+      //   canvas.width = res[0].width * dpr
+      //   canvas.height = res[0].height * dpr
+      //   ctx.scale(dpr, dpr)
+        
+
+      //   let clientWidth = wx.getSystemInfoSync().windowWidth;
+      //   let ratio = 750 / clientWidth;
+
+      //   //aspectFill 因为canvas不支持aspectFill属性，需要手写裁剪模式
+
+      //   const img = canvas.createImage() 
+      //   img.src = tempFilePaths[0]
+      //   img.onload = () => {
+      //   // ctx.drawImage(img, - 299 / ratio / 2.0, 0, 299 / ratio * 2, 417 / ratio);
+      //   ctx.drawImage(img, 0, 0, 299 / ratio, 417 / ratio);
+      //   }
+      // })
+
+
       //   that.setData({
       //     src:res.tempFilePaths
       // })
@@ -75,11 +109,13 @@ Page({
         },
         data: data.buffer,
         success:function(res){
+
           console.log('success');
           console.log(res)
           var statusCode = res.statusCode
           var errMsg = res.data.error_message
           var base64Image = res.data.body_image
+
           wx.hideLoading({
             success: (res) => {
               if(statusCode == 200) {
@@ -88,9 +124,61 @@ Page({
                   icon: 'none',
                   duration: 1000
                 })
-                that.setData({
-                  src: base64Image
-                })
+                
+                const fs = wx.getFileSystemManager()
+                const FILE_BASE_NAME = 'tmp_base64imgsrc'
+                const [, format, bodyData] = /data:image\/(\w+);base64,(.*)/.exec("data:image/png;base64," + base64Image) || []
+                if (!format) {
+                  console.log("ERROR_PARSE")
+                    return (new Error('ERROR_PARSE'))
+                }
+                const filePath = `${wx.env.USER_DATA_PATH}/${FILE_BASE_NAME+Date.parse(new Date())}.${format}`
+                const buffer = wx.base64ToArrayBuffer(bodyData)
+                fs.writeFile({
+                    filePath,
+                    data: buffer,
+                    encoding: 'binary',
+                    success() {
+                        console.log("写入图片成功")
+                        const query = wx.createSelectorQuery()
+                        query.select('#canvas_box')
+                        .fields({ node: true, size: true })
+                        .exec((res) => {
+                        const canvas = res[0].node
+                        const ctx = canvas.getContext('2d')
+                        const dpr = wx.getSystemInfoSync().pixelRatio
+                        canvas.width = res[0].width * dpr
+                        canvas.height = res[0].height * dpr
+                        ctx.scale(dpr, dpr)
+                        //rgb(60, 140, 220)
+
+                        let clientWidth = wx.getSystemInfoSync().windowWidth
+                        let ratio = 750 / clientWidth
+
+                        //aspectFill 因为canvas不支持aspectFill属性，需要手写裁剪模式
+
+                        const img = canvas.createImage() 
+                        img.src = filePath
+                        img.onload = () => {
+                        // ctx.drawImage(img, - 299 / ratio / 2.0, 0, 299 / ratio * 2, 417 / ratio);
+                        ctx.fillStyle = that.data.imageBackgroundColor;
+                        ctx.fillRect(0,0,299 / ratio, 417 / ratio);
+                        ctx.drawImage(img, 0, 0, 299 / ratio, 417 / ratio)     
+                                           
+                        }
+
+                        //canvasImage
+                        that.setData({
+                          canvasImage: canvas
+                        })
+
+                      })
+
+              },
+              fail() {
+                  console.log("写入图片失败")
+              },
+          });
               } else {
                 wx.showToast({
                   title: '上传失败，' + errMsg,
@@ -138,6 +226,36 @@ Page({
 
   downloadToPhotoAlbum() {
     console.log("downloadToPhotoAlbum")
+    let that = this;
+    wx.canvasToTempFilePath({
+      x: 0,
+      y: 0,
+      canvas: this.data.canvasImage,
+      success: function (res) {
+      
+        wx.saveImageToPhotosAlbum({
+          filePath: res.tempFilePath,
+          success() {
+            wx.showToast({
+              title: '保存成功'
+            })
+          },
+          fail() {
+            wx.showToast({
+              title: '保存失败',
+              icon: 'none'
+            })
+          }
+        })
+        
+      },
+      fail: function (res) {
+        console.log("canvasToTempFilePath 失败")
+      }
+    })
+
+    
+    
   },
 
   /**
