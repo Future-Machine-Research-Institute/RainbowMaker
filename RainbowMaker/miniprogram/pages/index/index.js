@@ -9,11 +9,13 @@ Page({
    * 页面的初始数据
    */
   data: {
-    // imageWidth: 0,
-    // imageHeight: 0,
+    scaleFlag: true,
     imageBackgroundColor : 'white',
     uploadButtonToTop: 0,
     src: "",
+    tmpImageFilePath: "",
+    tmpImageWidth: 0,
+    tmpImageHeight: 0,
     canvasImage:""
   },
 
@@ -31,7 +33,8 @@ Page({
     let that = this;
     that.setData({
       imageBackgroundColor : 'white'
-  })
+    })
+    that.drawCanvasImage(that.data.tmpImageFilePath,that.data.imageBackgroundColor)
   },
 
   blueSelected() {
@@ -39,7 +42,9 @@ Page({
     let that = this;
     that.setData({
       imageBackgroundColor : 'rgb(60, 140, 220)'
-  })
+    })
+    console.log("that.data.tmpImageFilePath: ",that.data.tmpImageFilePath)
+    that.drawCanvasImage(that.data.tmpImageFilePath,that.data.imageBackgroundColor)
   },
 
   redSelected() {
@@ -47,7 +52,117 @@ Page({
     let that = this;
     that.setData({
       imageBackgroundColor : 'rgb(255, 0, 0)'
+    })
+    that.drawCanvasImage(that.data.tmpImageFilePath,that.data.imageBackgroundColor)
+  },
+
+  drawCanvasImage(imageFilePath,canvasBgColor) {
+    let that = this;
+    const query = wx.createSelectorQuery()
+    query.select('#canvas_box')
+    .fields({ node: true, size: true })
+    .exec((res) => {
+
+    const canvas = res[0].node
+    const ctx = canvas.getContext('2d')
+    const dpr = wx.getSystemInfoSync().pixelRatio
+    var width = that.data.tmpImageWidth
+    var height = that.data.tmpImageHeight
+
+    canvas.width = res[0].width * dpr
+    canvas.height = res[0].height * dpr
+
+    //用于区分ios真机模式下scale与安卓真机的scale差异点
+    var isIOS = true
+
+    wx.getSystemInfo({
+      success:function(res){
+        console.log("系统信息:",res)
+        if(res.platform == "ios") {
+         isIOS = true 
+        } else {
+         isIOS = false
+        }
+      }
+    });
+
+    if(isIOS == true) {
+      console.log("ios真机")
+      if(that.data.scaleFlag == true) {
+        ctx.scale(dpr, dpr)
+        that.data.scaleFlag = false
+      }
+    } else {
+      console.log("安卓或者模拟器")
+      ctx.scale(dpr, dpr)
+    }
+    //rgb(60, 140, 220)
+
+    let clientWidth = wx.getSystemInfoSync().windowWidth
+    let ratio = 750 / clientWidth
+
+    //aspectFill 因为canvas不支持aspectFill属性，需要手写裁剪模式
+
+    const img = canvas.createImage() 
+
+    if(imageFilePath == "") {
+      
+    } else {
+      img.src = imageFilePath
+    }
+    
+    img.onload = () => {
+    // ctx.drawImage(img, - 299 / ratio / 2.0, 0, 299 / ratio * 2, 417 / ratio);
+    ctx.fillStyle = canvasBgColor;
+    ctx.fillRect(0, 0, 299 / ratio, 417 / ratio);
+
+    if(imageFilePath == "") {
+      
+    } else {
+       ctx.drawImage(img, 0, 0, 299 / ratio, 417 / ratio)
+
+      var disX = 0
+      var disY = 0
+      var realImageWidth = width;
+      var realImageHeight = height;
+
+      console.log("width:", width)
+      console.log("height:", height)
+
+      //添加图片裁剪模式，使canvas实现类似image控件的aspectFill属性
+      if(width >= height) {
+        console.log("高比宽小")
+        realImageWidth = ((417.0 / ratio) / height) * width
+        console.log("realImageWidth: ", realImageWidth)
+        realImageHeight = 417.0 / ratio
+        console.log("realImageHeight: ", realImageHeight)
+        disX = - (realImageWidth - 299.0 / ratio) / 2.0
+        disY = 0
+
+      } else {
+        console.log("宽比高小")
+        realImageWidth = 299.0 / ratio
+        console.log("realImageWidth: ", realImageWidth)
+        realImageHeight = ((299.0 / ratio) / width) * height
+        console.log("realImageHeight: ", realImageHeight)
+        disX = 0
+        disY = - (realImageHeight - 417.0 / ratio) / 2.0
+      }
+
+       ctx.drawImage(img, disX, disY, realImageWidth, realImageHeight);
+
+
+    }  
+                       
+    }
+
+    //canvasImage
+    that.setData({
+      canvasImage: canvas
+    })
+
   })
+
   },
 
   gotoShow() {
@@ -61,37 +176,16 @@ Page({
         // 返回选定照片的本地文件路径列表，tempFilePath可以作为img标签的src属性显示图片
         console.log(res)
         var tempFilePaths = res.tempFilePaths
-
-      //   const query = wx.createSelectorQuery()
-      //   query.select('#canvas_box')
-      //   .fields({ node: true, size: true })
-      //    .exec((res) => {
-      //   const canvas = res[0].node
-      //   const ctx = canvas.getContext('2d')
-      //   const dpr = wx.getSystemInfoSync().pixelRatio
-      //   canvas.width = res[0].width * dpr
-      //   canvas.height = res[0].height * dpr
-      //   ctx.scale(dpr, dpr)
-        
-
-      //   let clientWidth = wx.getSystemInfoSync().windowWidth;
-      //   let ratio = 750 / clientWidth;
-
-      //   //aspectFill 因为canvas不支持aspectFill属性，需要手写裁剪模式
-
-      //   const img = canvas.createImage() 
-      //   img.src = tempFilePaths[0]
-      //   img.onload = () => {
-      //   // ctx.drawImage(img, - 299 / ratio / 2.0, 0, 299 / ratio * 2, 417 / ratio);
-      //   ctx.drawImage(img, 0, 0, 299 / ratio, 417 / ratio);
-      //   }
-      // })
-
-
-      //   that.setData({
-      //     src:res.tempFilePaths
-      // })
-
+        wx.getImageInfo({ 
+      src: tempFilePaths[0], 
+      success: function (res) { 
+        that.setData({
+          tmpImageWidth: res.width,
+          tmpImageHeight: res.height
+        })
+       } 
+      }) 
+        //that.drawCanvasImage(tempFilePaths[0],that.data.imageBackgroundColor)
         let formData = new FormData()
         formData.append("api_key", "DCgBh_K6hy8jgfEmHmt4H3knmgtL7zj3")
         formData.append("api_secret", "C-Kp9_XiN536UCDjkKGkaZnAigWRuOL-")
@@ -139,40 +233,11 @@ Page({
                     data: buffer,
                     encoding: 'binary',
                     success() {
-                        console.log("写入图片成功")
-                        const query = wx.createSelectorQuery()
-                        query.select('#canvas_box')
-                        .fields({ node: true, size: true })
-                        .exec((res) => {
-                        const canvas = res[0].node
-                        const ctx = canvas.getContext('2d')
-                        const dpr = wx.getSystemInfoSync().pixelRatio
-                        canvas.width = res[0].width * dpr
-                        canvas.height = res[0].height * dpr
-                        ctx.scale(dpr, dpr)
-                        //rgb(60, 140, 220)
-
-                        let clientWidth = wx.getSystemInfoSync().windowWidth
-                        let ratio = 750 / clientWidth
-
-                        //aspectFill 因为canvas不支持aspectFill属性，需要手写裁剪模式
-
-                        const img = canvas.createImage() 
-                        img.src = filePath
-                        img.onload = () => {
-                        // ctx.drawImage(img, - 299 / ratio / 2.0, 0, 299 / ratio * 2, 417 / ratio);
-                        ctx.fillStyle = that.data.imageBackgroundColor;
-                        ctx.fillRect(0,0,299 / ratio, 417 / ratio);
-                        ctx.drawImage(img, 0, 0, 299 / ratio, 417 / ratio)     
-                                           
-                        }
-
-                        //canvasImage
-                        that.setData({
-                          canvasImage: canvas
-                        })
-
-                      })
+                      console.log("写入图片成功")
+                      that.setData({
+                        tmpImageFilePath: filePath
+                      }) 
+                      that.drawCanvasImage(filePath,that.data.imageBackgroundColor)
 
               },
               fail() {
