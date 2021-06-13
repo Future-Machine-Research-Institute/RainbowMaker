@@ -1,0 +1,84 @@
+/* Components/modelView/modelView.wxss */
+
+.mask{
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: #000;
+  z-index: 9000;
+  opacity: 0.40;
+}
+
+.modalDlg{
+  width: 580rpx;
+  height: 400rpx;
+  position: fixed;
+  top: 60%;
+  left: 0;
+  z-index: 9999;
+  margin: -370rpx 85rpx;
+  background-color: #fff;
+  border-radius: 10rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  overflow: hidden;
+  
+}
+/* .modalDlg>text{
+  font-size:30rpx;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+} */
+.titleText{
+  font-size:30rpx;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  height:80rpx;
+  font-weight: 700;
+  width:100%;
+  border-bottom: 0.1rpx solid #CCC;
+}
+.messageText{
+  font-size:30rpx;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  height:100rpx;
+  margin:0 40rpx;
+}
+
+.buttonView{
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.modalDlg>view>button{
+  width:290rpx;
+  height:80rpx;
+  font-size: 30rpx;
+  border-radius: 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  border-top: 0.1rpx solid #CCC;
+}
+.cancelButton{
+  border-right:0.1rpx solid #CCC;
+  color: red;
+}
+.confirmButton{
+  border-radius: 0;
+  color: rgb(66, 143, 218);
+}

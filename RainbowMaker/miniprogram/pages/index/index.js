@@ -66,6 +66,7 @@ Page({
     const canvas = res[0].node
     const ctx = canvas.getContext('2d')
     const dpr = wx.getSystemInfoSync().pixelRatio
+    console.log("dpr: ", dpr)
     var width = that.data.tmpImageWidth
     var height = that.data.tmpImageHeight
 
@@ -85,17 +86,17 @@ Page({
         }
       }
     });
-
-    if(isIOS == true) {
-      console.log("ios真机")
-      if(that.data.scaleFlag == true) {
-        ctx.scale(dpr, dpr)
-        that.data.scaleFlag = false
-      }
-    } else {
-      console.log("安卓或者模拟器")
-      ctx.scale(dpr, dpr)
-    }
+    ctx.scale(dpr, dpr)
+    // if(isIOS == true) {
+    //   console.log("ios真机")
+    //   if(that.data.scaleFlag == true) {
+    //     ctx.scale(dpr, dpr)
+    //     that.data.scaleFlag = false
+    //   }
+    // } else {
+    //   console.log("安卓或者模拟器")
+    //   ctx.scale(dpr, dpr)
+    // }
     //rgb(60, 140, 220)
 
     let clientWidth = wx.getSystemInfoSync().windowWidth
@@ -119,7 +120,7 @@ Page({
     if(imageFilePath == "") {
       
     } else {
-       ctx.drawImage(img, 0, 0, 299 / ratio, 417 / ratio)
+       //ctx.drawImage(img, 0, 0, 299 / ratio, 417 / ratio)
 
       var disX = 0
       var disY = 0
@@ -151,7 +152,6 @@ Page({
 
        ctx.drawImage(img, disX, disY, realImageWidth, realImageHeight);
 
-
     }  
                        
     }
@@ -165,8 +165,115 @@ Page({
 
   },
 
+  uploadImage(tempImagePath) {
+    let that = this
+    wx.showLoading({
+      title: '上传中',
+      mask: true
+    })
+    //that.drawCanvasImage(tempFilePaths[0],that.data.imageBackgroundColor)
+    let formData = new FormData()
+    formData.append("api_key", "DCgBh_K6hy8jgfEmHmt4H3knmgtL7zj3")
+    formData.append("api_secret", "C-Kp9_XiN536UCDjkKGkaZnAigWRuOL-")
+    formData.append("return_grayscale",0)
+    formData.appendFile("image_file", tempImagePath)
+    let data = formData.getData();
+    wx.request ({
+      url: 'https://api-cn.faceplusplus.com/humanbodypp/v2/segment',
+      method: "post",
+      header: {
+      'content-type': data.contentType
+    },
+    data: data.buffer,
+    success:function(res){
+
+      console.log('success');
+      console.log(res)
+      var statusCode = res.statusCode
+      var errMsg = res.data.error_message
+      var base64Image = res.data.body_image
+
+      wx.hideLoading({
+        success: (res) => {
+          if(statusCode == 200) {
+            wx.showToast({
+              title: '上传成功',
+              icon: 'none',
+              duration: 1000
+            })
+            
+            const fs = wx.getFileSystemManager()
+            const FILE_BASE_NAME = 'tmp_base64imgsrc'
+            const [, format, bodyData] = /data:image\/(\w+);base64,(.*)/.exec("data:image/png;base64," + base64Image) || []
+            if (!format) {
+              console.log("ERROR_PARSE")
+                return (new Error('ERROR_PARSE'))
+            }
+            const filePath = `${wx.env.USER_DATA_PATH}/${FILE_BASE_NAME+Date.parse(new Date())}.${format}`
+            const buffer = wx.base64ToArrayBuffer(bodyData)
+            fs.writeFile({
+                filePath,
+                data: buffer,
+                encoding: 'binary',
+                success() {
+                  console.log("写入图片成功")
+                  that.setData({
+                    tmpImageFilePath: filePath
+                  }) 
+                  that.drawCanvasImage(filePath,that.data.imageBackgroundColor)
+
+          },
+          fail() {
+              console.log("写入图片失败")
+          },
+      });
+          } else {
+            // wx.showToast({
+            //   title: '上传失败，' + errMsg,
+            //   icon: 'none',
+            //   duration: 1500
+            // })
+            wx.showModal({
+              title: '上传图片失败',
+              content: '是否尝试重新上传图片',
+              showCancel: true,
+              success: function (res) {
+                 if (res.confirm) {
+                    that.uploadImage(tempImagePath)
+                 } else {
+                    
+                 }
+              },
+              //接口调用失败的回调函数
+              fail: function (res) { },
+              //接口调用结束的回调函数（调用成功、失败都会执行）
+              complete: function (res) { },
+           })
+          }
+        },
+      })
+    },
+    fail:function(res){
+      console.log('failed');
+      console.log(res)
+      wx.hideLoading({
+        success: (res) => {
+          wx.showToast({
+            title: '上传失败，' + res.errMsg,
+            icon: 'none',
+            duration: 1500
+          })
+        },
+      })
+    },
+    complete:function() {
+      console.log('completed');
+    }
+  })
+  },
+
   gotoShow() {
-    let that = this;
+    let that = this
     wx.chooseImage({
       count: 1, // 默认9
       sizeType: ['original', 'compressed'], // 可以指定是原图还是压缩图，默认二者都有
@@ -177,101 +284,15 @@ Page({
         console.log(res)
         var tempFilePaths = res.tempFilePaths
         wx.getImageInfo({ 
-      src: tempFilePaths[0], 
-      success: function (res) { 
-        that.setData({
-          tmpImageWidth: res.width,
-          tmpImageHeight: res.height
-        })
-       } 
-      }) 
-        //that.drawCanvasImage(tempFilePaths[0],that.data.imageBackgroundColor)
-        let formData = new FormData()
-        formData.append("api_key", "DCgBh_K6hy8jgfEmHmt4H3knmgtL7zj3")
-        formData.append("api_secret", "C-Kp9_XiN536UCDjkKGkaZnAigWRuOL-")
-        formData.append("return_grayscale",0)
-        formData.appendFile("image_file", res.tempFilePaths[0])
-        let data = formData.getData();
-        wx.showLoading({
-          title: '上传中',
-        })
-        wx.request ({
-          url: 'https://api-cn.faceplusplus.com/humanbodypp/v2/segment',
-          method: "post",
-          header: {
-          'content-type': data.contentType
-        },
-        data: data.buffer,
-        success:function(res){
-
-          console.log('success');
-          console.log(res)
-          var statusCode = res.statusCode
-          var errMsg = res.data.error_message
-          var base64Image = res.data.body_image
-
-          wx.hideLoading({
-            success: (res) => {
-              if(statusCode == 200) {
-                wx.showToast({
-                  title: '上传成功',
-                  icon: 'none',
-                  duration: 1000
-                })
-                
-                const fs = wx.getFileSystemManager()
-                const FILE_BASE_NAME = 'tmp_base64imgsrc'
-                const [, format, bodyData] = /data:image\/(\w+);base64,(.*)/.exec("data:image/png;base64," + base64Image) || []
-                if (!format) {
-                  console.log("ERROR_PARSE")
-                    return (new Error('ERROR_PARSE'))
-                }
-                const filePath = `${wx.env.USER_DATA_PATH}/${FILE_BASE_NAME+Date.parse(new Date())}.${format}`
-                const buffer = wx.base64ToArrayBuffer(bodyData)
-                fs.writeFile({
-                    filePath,
-                    data: buffer,
-                    encoding: 'binary',
-                    success() {
-                      console.log("写入图片成功")
-                      that.setData({
-                        tmpImageFilePath: filePath
-                      }) 
-                      that.drawCanvasImage(filePath,that.data.imageBackgroundColor)
-
-              },
-              fail() {
-                  console.log("写入图片失败")
-              },
-          });
-              } else {
-                wx.showToast({
-                  title: '上传失败，' + errMsg,
-                  icon: 'none',
-                  duration: 1500
-                })
-              }
-            },
+        src: tempFilePaths[0], 
+        success: function (res) { 
+          that.setData({
+            tmpImageWidth: res.width,
+            tmpImageHeight: res.height
           })
-        },
-        fail:function(res){
-          console.log('failed');
-          console.log(res)
-          wx.hideLoading({
-            success: (res) => {
-              wx.showToast({
-                title: '上传失败，' + res.errMsg,
-                icon: 'none',
-                duration: 1500
-              })
-            },
-          })
-        },
-        complete:function() {
-          console.log('completed');
-        }
-      })
-
+        } 
+        }) 
+          that.uploadImage(res.tempFilePaths[0])
         },
         fail: function() {
           // fail
@@ -289,15 +310,13 @@ Page({
       })
   },
 
-  downloadToPhotoAlbum() {
-    console.log("downloadToPhotoAlbum")
-    let that = this;
+  saveToPhotoAlbum() {
+    let that = this
     wx.canvasToTempFilePath({
       x: 0,
       y: 0,
       canvas: this.data.canvasImage,
       success: function (res) {
-      
         wx.saveImageToPhotosAlbum({
           filePath: res.tempFilePath,
           success() {
@@ -312,15 +331,42 @@ Page({
             })
           }
         })
-        
       },
       fail: function (res) {
+        wx.showToast({
+          title: 'canvasToTempFilePath 失败',
+          icon: 'none'
+        })
         console.log("canvasToTempFilePath 失败")
       }
     })
+  },
 
-    
-    
+  downloadToPhotoAlbum() {
+    console.log("downloadToPhotoAlbum")
+    let that = this;
+
+    //获取相册授权
+    wx.getSetting({
+      success(res) {
+        if (!res.authSetting['scope.writePhotosAlbum']) {
+          wx.authorize({
+            scope: 'scope.writePhotosAlbum',
+            success() { 
+              //这里是用户同意授权后的回调
+              that.saveToPhotoAlbum()
+            },
+            fail() { 
+              //这里是用户拒绝授权后的回调
+              that.modelView.showDialog()
+            }
+          })
+        } else {  
+          //用户已经授权过了
+          that.saveToPhotoAlbum()
+        }
+      }
+    })
   },
 
   /**
@@ -335,6 +381,7 @@ Page({
     let clientWidth = wx.getSystemInfoSync().windowWidth;
     // 算出比例
     let ratio = 750 / clientWidth;
+    console.log("ratio: ", ratio)
     // 算出高度(单位rpx)
     let height = clientHeight * ratio;
     console.log("realHeight: ", height)
@@ -355,7 +402,7 @@ Page({
    * 生命周期函数--监听页面初次渲染完成
    */
   onReady: function () {
-
+    this.modelView = this.selectComponent("#modelView")
   },
 
   /**

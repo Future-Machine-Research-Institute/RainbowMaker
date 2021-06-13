@@ -1,5 +1,6 @@
 <!--index.wxml-->
 <view class = "container">
+  <modelView id = "modelView"></modelView>
   <!-- <image class = "idPhotoImage" mode = "aspectFill" src = "data:image/png;base64,{{src}}" style = "background-color:{{imageBackgroundColor}}"></image> -->
   <canvas class = "idPhotoImage" type = "2d" id = "canvas_box" style = "background-color:{{imageBackgroundColor}}" canvasId = "canvas_box" ></canvas>
   <view class = "backgroundColorSelectedView">

@@ -1,0 +1,11 @@
+<!--Components/modelView/modelView.wxml-->
+<!-- 自定义模态框 -->
+<view class="mask" bindtap='modelCancel' catchtouchmove="preventTouchMove" wx:if="{{showModalDlg}}"></view>
+<view class="modalDlg" wx:if="{{showModalDlg}}">
+    <text class = "titleText">相册访问授权</text>
+    <text class = "messageText">检测到您未授权小程序获取您的相册权限，是否重新授权？</text>
+    <view class = "buttonView">
+    <button class = "cancelButton" bindtap="toCancel">取消</button>
+    <button class = "confirmButton" bindtap="openSetting">去设置</button>
+    </view>
+</view>
